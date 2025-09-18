@@ -390,3 +390,307 @@ void reconhece_pontuacao(TInfoAtomo *infoAtomo){
   }
 }
 
+/* ANALISADOR SINTÁTICO */
+TInfoAtomo tokenAtual;
+
+void proximo_token(){ 
+  tokenAtual = obterAtomo(); 
+}
+
+void erro_sintatico(const char *msg){
+  fprintf(stderr,"Erro sintático na linha %d: %s (token %d)\n", tokenAtual.linha,msg,tokenAtual.atomo);
+  exit(EXIT_FAILURE);
+}
+
+/* Protótipos */
+void programa(); 
+void bloco(); 
+void declaracoes();
+void lista_comandos(); 
+void comando();
+void expressao(); 
+void expressao_simples();
+void termo(); 
+void fator();
+void operador_relacional(); 
+void operador_adicao(); 
+void operador_multiplicacao();
+
+/* ------------------------
+ * FUNÇÕES DO PARSER
+ * ------------------------ */
+void programa(){
+    
+  if(tokenAtual.atomo!=PROGRAM) {
+    erro_sintatico("Esperado 'program'");
+  }
+    
+    proximo_token();
+    
+    if(tokenAtual.atomo!=IDENTIFICADOR) {
+      erro_sintatico("Esperado identificador");
+    }
+    
+    proximo_token();
+    
+    if(tokenAtual.atomo!=PONTO_VIRGULA) {
+      erro_sintatico("Esperado ';'");
+    }
+    
+    proximo_token();
+    
+    bloco();
+    
+    if(tokenAtual.atomo!=PONTO) {
+      erro_sintatico("Esperado '.'");
+    }
+    
+    proximo_token();
+}
+
+
+void bloco(){
+    declaracoes();
+
+    if(tokenAtual.atomo!=BEGIN) {
+      erro_sintatico("Esperado 'begin'");
+    }
+
+    proximo_token();
+
+    lista_comandos();
+
+    if(tokenAtual.atomo!=END) {
+      erro_sintatico("Esperado 'end'");
+    }
+
+    proximo_token();
+}
+
+
+void declaracoes(){
+
+  if(tokenAtual.atomo==VAR){
+
+      proximo_token();
+
+        while(tokenAtual.atomo==IDENTIFICADOR){
+
+          proximo_token();
+
+            while(tokenAtual.atomo==VIRGULA) proximo_token(), proximo_token(); // lista de ids
+            
+            if(tokenAtual.atomo!=DOIS_PONTOS) {
+              erro_sintatico("Esperado ':'");
+            }
+
+            proximo_token();
+
+            if(!(tokenAtual.atomo==INTEGER || tokenAtual.atomo==BOOLEAN || tokenAtual.atomo==CHAR)){
+                erro_sintatico("Tipo inválido");
+              }
+
+                proximo_token();
+
+            if(tokenAtual.atomo!=PONTO_VIRGULA) erro_sintatico("Esperado ';'");
+            proximo_token();
+        }
+    }
+}
+
+
+void lista_comandos(){
+    comando();
+    while(tokenAtual.atomo==PONTO_VIRGULA){
+        proximo_token();
+        comando();
+    }
+}
+
+
+void comando(){
+    if(tokenAtual.atomo==IDENTIFICADOR){
+        proximo_token();
+        
+        if(tokenAtual.atomo==ATRIBUICAO){
+            proximo_token();
+            expressao();
+        }
+
+    }
+    
+    else if(tokenAtual.atomo==READ){
+        proximo_token();
+        
+        if(tokenAtual.atomo!=ABRE_PAR) {
+          erro_sintatico("Esperado '('");
+        }
+        
+        proximo_token();
+        
+        if(tokenAtual.atomo!=IDENTIFICADOR) {
+          erro_sintatico("Esperado identificador");
+        }
+        
+        proximo_token();
+
+        while(tokenAtual.atomo==VIRGULA){
+            proximo_token();
+            
+            if(tokenAtual.atomo!=IDENTIFICADOR) {
+              erro_sintatico("Esperado identificador");
+            }
+            
+            proximo_token();
+        }
+        if(tokenAtual.atomo!=FECHA_PAR) {
+          erro_sintatico("Esperado ')'");
+        }
+        proximo_token();
+    } 
+    else if(tokenAtual.atomo==WRITE){
+        
+      proximo_token();
+        
+        if(tokenAtual.atomo!=ABRE_PAR) {erro_sintatico("Esperado '('");}
+        
+        proximo_token();
+        
+        if(tokenAtual.atomo!=IDENTIFICADOR) {
+          erro_sintatico("Esperado identificador");
+        }
+
+        proximo_token();
+        
+        while(tokenAtual.atomo==VIRGULA){
+            proximo_token();
+            if(tokenAtual.atomo!=IDENTIFICADOR) erro_sintatico("Esperado identificador");
+            proximo_token();
+        }
+
+        if(tokenAtual.atomo!=FECHA_PAR) {
+          erro_sintatico("Esperado ')'");
+        }
+
+        proximo_token();
+    } 
+    else if(tokenAtual.atomo==IF){
+        proximo_token();
+        expressao();
+        if(tokenAtual.atomo!=THEN) {
+          erro_sintatico("Esperado 'then'");
+        }
+        proximo_token();
+        comando();
+        if(tokenAtual.atomo==ELSE){
+            proximo_token();
+            comando();
+        }
+    } 
+    else if(tokenAtual.atomo==WHILE){
+        proximo_token();
+        expressao();
+        if(tokenAtual.atomo!=DO) {
+          erro_sintatico("Esperado 'do'");
+        }
+        proximo_token();
+        comando();
+    } 
+    else if(tokenAtual.atomo==BEGIN){
+        proximo_token();
+        lista_comandos();
+        
+        if(tokenAtual.atomo!=END) {
+          erro_sintatico("Esperado 'end'");
+        }
+        
+        proximo_token();
+    }
+}
+
+
+/* ------------------------
+ * EXPRESSÕES
+ * ------------------------ */
+void expressao(){
+    expressao_simples();
+
+    if(tokenAtual.atomo==IGUAL || tokenAtual.atomo==DIFERENTE || tokenAtual.atomo==MENOR ||
+        tokenAtual.atomo==MENOR_IGUAL || tokenAtual.atomo==MAIOR || tokenAtual.atomo==MAIOR_IGUAL ||
+        tokenAtual.atomo==AND || tokenAtual.atomo==OR){
+    
+          operador_relacional();
+        expressao_simples();
+    
+      }
+}
+
+void expressao_simples(){
+    
+  if(tokenAtual.atomo==SOMA || tokenAtual.atomo==SUBTRACAO) {
+    proximo_token();
+  } // sinal opcional
+  
+  termo();
+  
+  while(tokenAtual.atomo==SOMA || tokenAtual.atomo==SUBTRACAO){
+      operador_adicao();
+      termo();
+  }
+}
+
+void termo(){
+  fator();
+
+  while(tokenAtual.atomo==MULTIPLICACAO || tokenAtual.atomo==DIV){
+    operador_multiplicacao();
+    fator();
+  }
+}
+
+void fator(){
+    
+  if(tokenAtual.atomo==IDENTIFICADOR || tokenAtual.atomo==NUMERO || tokenAtual.atomo==CARACTER
+        || tokenAtual.atomo==TRUE || tokenAtual.atomo==FALSE){
+        proximo_token();
+    } 
+    
+  else if(tokenAtual.atomo==ABRE_PAR){
+      proximo_token();
+      expressao();
+      if(tokenAtual.atomo!=FECHA_PAR) erro_sintatico("Esperado ')'");
+      proximo_token();
+  } 
+  
+  else if(tokenAtual.atomo==NOT){
+      proximo_token();
+      fator();
+  } 
+  
+  else {
+      erro_sintatico("Fator inválido");
+  }
+}
+
+void operador_relacional(){ 
+  proximo_token(); 
+}
+
+void operador_adicao(){ 
+  proximo_token(); 
+}
+
+void operador_multiplicacao(){ 
+  proximo_token(); 
+}
+
+/* ------------------------
+ * FUNÇÃO DE ENTRADA DO PARSER
+ * ------------------------ */
+void analisar(){
+    proximo_token();
+    programa();
+    if(tokenAtual.atomo!=EOS)
+        erro_sintatico("Tokens extras após fim do programa");
+    printf("%d linhas analisadas, programa sintaticamente correto\n", nLinha);
+}
