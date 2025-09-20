@@ -1,0 +1,315 @@
+#include "../include/lexer.h"
+
+TInfoAtomo obterAtomo(){
+  TInfoAtomo infoAtomo;
+
+  infoAtomo.atomo = ERRO;
+
+  while ( *buffer == '\n' || *buffer == ' ' || *buffer == '\t' ){
+    if ( *buffer == '\n' ) {
+      nLinha++;
+    }
+      
+    buffer++;
+  }
+    
+  infoAtomo.linha = nLinha;
+
+  //Verifica se é um comentário
+  if((*buffer) == '(' && (*(buffer+1)) == '*'){
+    acknowledge_comment(&infoAtomo);
+  }
+  
+  //Verifica se é um número inteiro 
+  else if (isdigit(*buffer)){  //Reconhecendo números inteiros
+    recognize_number(&infoAtomo);
+  }
+
+  //Verifica ser é um identificador ou palavra reservada da linguagem
+  else if (isalpha(*buffer) || (*buffer)=='_') {  
+    recognize_id_reserved_word(&infoAtomo);
+  }
+
+  //Verficar se é um char
+  else if ((*buffer) == '\'') {  
+    recognize_char(&infoAtomo);
+  }
+
+  //Reconhece operadores e pontução
+  else if (ispunct(*buffer)){  //Reconhecendo operadores ( + ,  - , /, * )
+    recognize_score(&infoAtomo);
+  }
+
+  //Fim do Buffer
+  else if ( *buffer == '\0' ){
+    infoAtomo.atomo = EOS;  
+  }
+
+  return infoAtomo;
+}
+
+
+void recognize_number(TInfoAtomo *infoAtomo){
+    char *ini_lexema = buffer;
+    
+q0:
+
+    if(isdigit(*buffer) ){
+        buffer++;
+        goto q0;
+    }
+
+    else if ((*buffer) == 'd' || (*buffer) == 'D'){
+      buffer++;
+      goto q1;
+    }
+    
+    goto q3;
+
+q1:
+
+    if((*buffer) == '+'){
+      buffer++;
+    }
+
+    if(isdigit(*buffer)){
+      buffer++;
+      goto q2;
+    }
+
+    return;
+
+q2:
+
+    if(isdigit(*buffer)){
+      buffer++;
+      goto q2;
+    }
+
+    goto q3;
+
+q3:
+    // recorta lexema 
+    strncpy(lexema,ini_lexema,buffer-ini_lexema);
+    lexema[buffer-ini_lexema] = '\0'; // aqui temos uma string
+
+    infoAtomo->atributo.numero = transform_exponential_number(lexema);
+    infoAtomo->atomo = NUMERO;
+
+    return;
+
+}
+
+int transform_exponential_number(char *str){
+  char *d_pos = strchr(str, 'd'); //Procura a primeira ocorrência do caracter d numa string
+
+  if(d_pos == NULL){
+     return atoi(str); //Retorna número simples
+  }
+  
+  *d_pos = '\0'; //Separando a base do expoente
+  int resultado = atoi(str); //Armazenando o valor base
+
+  char *exp_str = d_pos++; //Salvando a referência do expoente
+  if(*exp_str == '+'){ //Verifica se há um sinal de +
+    exp_str++; //Pula para a próxima posição
+  }
+
+  int expoente = atoi(exp_str); //Converte para inteiro
+
+  for (int i = 0; i < expoente; i++){
+    resultado *= 10; //Calcula o valor final do resultado =
+  }
+
+  *d_pos = 'd'; //Retorna com o caracter d na posição de origem
+  return resultado; //Retorna com o número inteiro
+
+}
+
+void recognize_id_reserved_word(TInfoAtomo *infoAtomo){
+  // Verificar se o infoAtomo é um identificador ou uma palavra reservada
+    char *ini_lexema = buffer;
+    int tamanho_str = 0;
+    int i;
+
+q1: 
+    if(isalpha(*buffer) || (*buffer)=='_' || isdigit(*buffer)){
+      if(tamanho_str > 15){
+        return; //Não pode variáveis com mais de 15 caracteres
+      }
+
+      buffer++;
+      tamanho_str++;
+      goto q1;
+
+    }
+
+    //Extração do Lexema para realizar a verificação entre palavra reservada e identificador
+    strncpy(lexema, ini_lexema, buffer-ini_lexema);
+    lexema[buffer-ini_lexema] = '\0';
+
+
+    //Verificar se a palavra identificada é uma palavra reservada da linguagem
+    for( i=0; palavras_reservadas_paskenzie[i].palavra != NULL; i++ )
+    {
+      if(strcmp(lexema, palavras_reservadas_paskenzie[i].palavra) == 0)
+      {
+        infoAtomo->atomo = palavras_reservadas_paskenzie[i].atomo;
+        return;
+      }
+    }
+
+
+    //Caso contrário será um identificador
+    strncpy(infoAtomo->atributo.id,ini_lexema,buffer-ini_lexema);
+    infoAtomo->atributo.id[buffer-ini_lexema] = '\0'; 
+    infoAtomo->atomo = IDENTIFICADOR;
+
+    return;
+}
+
+void recognize_char(TInfoAtomo *infoAtomo){
+
+    buffer++; //Consumindo '
+
+    if((*buffer) == '\'' || (*buffer) == '\0' || (*buffer) == '\n') 
+    {
+      return;
+    }
+
+    infoAtomo->atributo.ch = *buffer;
+    buffer++;
+
+    if((*buffer) != '\'')
+    {
+     return; 
+    } 
+
+    buffer++; //Consome a segunda aspa
+    infoAtomo->atomo = CARACTER; //Atribui o infoAtomo como CHAR
+    return;
+
+}
+
+void acknowledge_comment(TInfoAtomo *infoAtomo){
+    buffer += 2; // Consome (*
+
+q1:
+   if((*buffer) == '\0'){
+    return; //Retorna com erro, pois não foi fechado o comentário
+   }
+
+   if((*buffer) == '*' && (*(buffer+1)) == ')'){
+    buffer += 2;
+    infoAtomo->atomo = COMENTARIO;
+    return;
+   }
+
+   if(*buffer == '\n'){
+    nLinha++;
+   }
+
+   buffer++;
+   goto q1;
+
+};
+
+void recognize_score(TInfoAtomo *infoAtomo){
+
+  switch (*buffer)
+  {
+  case '+': //Identificação de sinal de adição
+    buffer++;
+    infoAtomo->atomo = SOMA;
+    return;
+
+  case '-': //Identificação de sinal de subtração
+    buffer++;
+    infoAtomo->atomo = SUBTRACAO;
+    return;
+  
+  case '*': //Identificação de sinal de multiplicação
+    buffer++;
+    infoAtomo->atomo = MULTIPLICACAO;
+    return;
+
+  case ';': //Identificação de sinal de ponto e vígula
+    buffer++;
+    infoAtomo->atomo = PONTO_VIRGULA;
+    return;
+  
+  case ':': //Identificação de sinal de dois pontos ou atribuição
+    
+   buffer++;
+
+    if((*buffer) == '='){
+      buffer++;
+      infoAtomo->atomo = ATRIBUICAO;
+      return;
+    } else {
+    infoAtomo->atomo = DOIS_PONTOS;
+    }
+
+    return;
+  
+  case '(': //Identificação de abre parênteses
+    buffer++;
+    infoAtomo->atomo = ABRE_PAR;
+    return;
+  
+  case ')': //Identifcação de fecha parênteses
+    buffer++;
+    infoAtomo->atomo = FECHA_PAR;
+    return;
+  
+  case '.': //Identificação de ponto final
+    buffer++;
+    infoAtomo->atomo = PONTO;
+    return;
+
+  case ',': //Identificação de vírgula
+    buffer++;
+    infoAtomo->atomo = VIRGULA;
+    return;
+
+  case '=':
+    buffer++;
+    infoAtomo->atomo = IGUAL;
+    return;
+
+  case '>':
+    buffer++;
+
+    if((*buffer) == '='){
+      buffer++;
+      infoAtomo->atomo = MAIOR_IGUAL;
+    }
+    else {
+      infoAtomo->atomo = MAIOR;
+    }
+
+    return;
+  
+  case '<':
+
+    buffer++;
+
+    if((*buffer) == '>'){
+      buffer++;
+      infoAtomo->atomo = DIFERENTE;
+    }
+    else if ((*buffer) == '=')
+    {
+      buffer++;
+      infoAtomo->atomo = MENOR_IGUAL;
+    }
+    else {
+      infoAtomo->atomo = MENOR;
+    }
+
+    return;
+  
+  default:
+    return;
+  }
+}

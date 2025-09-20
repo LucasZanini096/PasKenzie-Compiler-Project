@@ -1,5 +1,12 @@
-#ifndef COMPILER_H
-#define COMPILER_H
+#ifndef GLOBAL_H
+#define GLOBAL_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define BUFFER_SIZE 1024
 
 typedef enum{
     ERRO,
@@ -20,6 +27,8 @@ typedef enum{
     COMENTARIO, EOS
 }TAtomo;
 
+char *strMensagem[] = {"erro lexico","IDENTIFICADOR","NUMERO","+","*","EOS"};
+
 typedef struct{ 
   TAtomo atomo;  // Identificação do tipo do átomo
   int linha;  // Linha que reconheceu o átomo
@@ -35,16 +44,20 @@ typedef struct {
   TAtomo atomo;
 } TPalavraReservada;
 
+TPalavraReservada palavras_reservadas_paskenzie[] = {
+    {"program", PROGRAM}, {"var", VAR}, {"begin", BEGIN},
+    {"end", END}, {"if", IF}, {"then", THEN}, {"else", ELSE},
+    {"while", WHILE}, {"do", DO}, {"read", READ}, {"write", WRITE},
+    {"char", CHAR}, {"integer", INTEGER}, {"boolean", BOOLEAN},
+    {"div", DIV}, {"or", OR}, {"and", AND}, {"not", NOT},
+    {"true", TRUE}, {"false", FALSE}, {NULL, ERRO}
+};
+
 char *buffer;
 char lexema[20]; // Composição de fragmentos que compõem o átomo
 int nLinha;
+TInfoAtomo info_atomo;
+TAtomo lookahead;
+FILE *file;
 
-TInfoAtomo obterAtomo();
-void reconhece_numero(TInfoAtomo *infoatomo); // Reconhecer números
-void reconhece_id_palavra_reservada(TInfoAtomo *infoAtomo); // Reconhecer identifcadores e palavras reservadas
-void reconhece_pontuacao(TInfoAtomo *infoAtomo); //Reconhecer operadores
-void reconhece_char(TInfoAtomo *infoAtomo); //Reconhece char
-void reconhece_comentario(TInfoAtomo *infoAtomo); //Reconhece comentários
-int  transforma_numero_exponencial(char *str);
-
-#endif 
+#endif
