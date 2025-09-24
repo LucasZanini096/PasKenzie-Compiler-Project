@@ -11,6 +11,17 @@
 
 int main(int argc, char *argv[]){
 
+    if (argc < 2){
+        printf("Erro: falta de argumentos.\nPara compilar use: %s <arquivo.txt>\n", argv[0]);
+        return 1;
+    }
+
+    if (argc > 2){
+        printf("Erro: muitos argumentos.\nPara compilar use: %s <arquivo.txt>\n", argv[0]);
+        return 1;
+    }
+    
+
     file = fopen(argv[1], "r");
     if (file == NULL){
         perror("Erro ao abrir o arquivo");

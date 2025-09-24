@@ -64,7 +64,7 @@ Ambiente testado com as seguintes flags:
 Compile com:
 
 ```bash
-gcc -Wall -Wno-unused-result -g -Og compiler.c lexer.c parser.c -o compilador
+gcc -Wall -Wno-unused-result -g -Og compiler.c -o compilador
 
 ```
 
