@@ -9,9 +9,9 @@
 #include "include/global.h"
 #include "src/parser.c"
 
-int main(void){
+int main(int argc, char *argv[]){
 
-    file = fopen("program.txt", "r");
+    file = fopen(argv[1], "r");
     if (file == NULL){
         perror("Erro ao abrir o arquivo");
         return 1;
