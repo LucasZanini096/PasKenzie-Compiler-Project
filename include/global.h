@@ -6,7 +6,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 1024 //Tamanho do buffer de entrada
 
 typedef enum{
     ERRO,
@@ -25,26 +25,24 @@ typedef enum{
     ABRE_PAR, FECHA_PAR, PONTO,
     // Comentário e fim de arquivo
     COMENTARIO, EOS
-}TAtomo;
-
-char *strMensagem[] = {"erro lexico","IDENTIFICADOR","NUMERO","+","*","EOS"};
+}TAtom; //Definição dos tipos de átomos presentes na linguagem
 
 typedef struct{ 
-  TAtomo atomo;  // Identificação do tipo do átomo
-  int linha;  // Linha que reconheceu o átomo
+  TAtom atom;  // Identificação do tipo do átomo
+  int line;  // Linha que reconheceu o átomo
   union{ 
-    int numero;   // atributo do átomo constint (constante inteira)  
+    int number;   // atributo do átomo constint (constante inteira)  
     char id[16];  // atributo identifier 
     char ch;      // atributo do átomo constchar (constante carecter) 
-  }atributo; 
-}TInfoAtomo;
+  }attribute; 
+}TInfoAtom;
 
 typedef struct {
-  char *palavra;
-  TAtomo atomo;
-} TPalavraReservada;
+  char *word;
+  TAtom atom;
+} TReservedWord;
 
-TPalavraReservada palavras_reservadas_paskenzie[] = {
+TReservedWord reserved_words_paskenzie[] = {
     {"program", PROGRAM}, {"var", VAR}, {"begin", BEGIN},
     {"end", END}, {"if", IF}, {"then", THEN}, {"else", ELSE},
     {"while", WHILE}, {"do", DO}, {"read", READ}, {"write", WRITE},
@@ -54,10 +52,10 @@ TPalavraReservada palavras_reservadas_paskenzie[] = {
 };
 
 char *buffer;
-char lexema[20]; // Composição de fragmentos que compõem o átomo
-int nLinha;
-TInfoAtomo info_atomo;
-TAtomo lookahead;
+char lexeme[20]; // Composição de fragmentos que compõem o átomo - Lexema
+int nLine;
+TInfoAtom info_atom;
+TAtom lookahead;
 FILE *file;
 
 #endif

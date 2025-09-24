@@ -5,33 +5,32 @@
 
 */
 
-
 #include "include/global.h"
 #include "src/parser.c"
 
 int main(void){
 
-    file = fopen("program.txt", "r");
+    file = fopen("program.txt", "r"); //Abrindo o arquivo txt que possui o programa
     if (file == NULL){
         perror("Erro ao abrir o arquivo");
         return 1;
     }
 
-    buffer = (char*) malloc(BUFFER_SIZE * sizeof(char));
+    buffer = (char*) malloc(BUFFER_SIZE * sizeof(char)); //Alocando memória para o buffer de entrada
 
     buffer[0] = '\0';
 
-    char linha[256];
-    while(fgets(linha, sizeof(linha), file) != NULL){
-        strcat(buffer, linha);
+    char line[256];
+    while(fgets(line, sizeof(line), file) != NULL){
+        strcat(buffer, line); //Copiando cada linha do arquivo para o buffer
     }
 
-    fclose(file);
-    nLinha = 1;
+    fclose(file); //Fechando o arquivo 
+    nLine = 1;
 
-    info_atomo = obterAtomo();
-    lookahead = info_atomo.atomo;
-    analyse();
+    info_atom = getAtom();  //Atribuindo o info_atom
+    lookahead = info_atom.atom; //Atribuindo o lookahead
+    syntactic_analysis(); //Função de anaálise sintática
 
     return 0;
 }
