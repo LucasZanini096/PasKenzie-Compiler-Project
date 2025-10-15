@@ -23,7 +23,7 @@ void consome( TAtomo atomo ){
  * ------------------------ */
 void program(){
 
-  if(lookahead==COMENTARIO){
+  while (lookahead==COMENTARIO){
     consome(COMENTARIO);
   }
 
