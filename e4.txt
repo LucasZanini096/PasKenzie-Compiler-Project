@@ -1,0 +1,6 @@
+program teste2;
+var
+  x: integer;
+begin
+  y := 10
+end.

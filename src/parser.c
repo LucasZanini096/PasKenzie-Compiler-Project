@@ -1,17 +1,29 @@
 #include "lexer.c"
 #include "../include/parser.h"
+#include "../include/hash.h"
 
 /* ANALISADOR SINTÁTICO */
 
 //Função consome
 void consume( TAtom atom ){
     if( lookahead == atom ){
-      if (lookahead == IDENTIFICADOR){
+
+      switch (lookahead)
+      {
+      case IDENTIFICADOR:
         printf("\n# %2d:identifier : %s", info_atom.line, info_atom.attribute.id);
-      } else {
+        break;
+
+      case NUMERO:
+        printf("\n# %2d:number : %d", info_atom.line, info_atom.attribute.number);
+        break;
+      
+      default:
         printf("\n# %2d:%s", info_atom.line, print_atom(lookahead)); // Imprime o token ATUAL
+        break;
       }
-      info_atom = getAtom();  
+
+      info_atom = getAtom();
       lookahead = info_atom.atom;
     }
     else{
@@ -46,11 +58,22 @@ void block(){
     statement_part(); 
 }
 
- //<variable_declaration_part> ::= [ var <variable_declaration> ‘;’  { <variable_declaration> ‘;’ } ] 
+
+//<variable_declaration_part> ::= [ var <variable_declaration> ';'  { <variable_declaration> ';' } ] 
 void variable_declaration_part(){
+
+  // Consumir comentários antes de var
+  while(lookahead == COMENTARIO){
+    consume(COMENTARIO);
+  }
 
   if(lookahead==VAR){
     consume(VAR);
+
+    // Consumir comentários após var
+    while(lookahead == COMENTARIO){
+      consume(COMENTARIO);
+    }
 
     variable_declaration();
     consume(PONTO_VIRGULA);
@@ -61,16 +84,44 @@ void variable_declaration_part(){
       consume(PONTO_VIRGULA);
     }
   } 
+
+  else if(lookahead == IDENTIFICADOR){
+    printf("\n# %2d:Erro lexico: palavra reservada 'var' deve ser em minusculo\n", info_atom.line);
+    exit(1);
+  }
 }
 
 //<variable_declaration> ::= identifier { ‘,’ identifier } ‘:’ <type>
 void variable_declaration(){
 
+  char id[16];
+
+  strcpy(id, info_atom.attribute.id);
   consume(IDENTIFICADOR);
+
+  // Verifica se já foi declarado o símbolo
+  if(searchSymbol(&tabelaSimbolos, id) != NULL) {
+      printf("\n# %2d:Erro semantico: variavel '%s' ja declarada\n", 
+              info_atom.line, id);
+      exit(1);
+  }
+
+  // Insere na tabela
+  insertSymbol(&tabelaSimbolos, id, nextAddress++);
 
   while (lookahead == VIRGULA){
     consume(VIRGULA);
+    strcpy(id, info_atom.attribute.id);
     consume(IDENTIFICADOR);
+
+    // Verifica duplicação
+    if(searchSymbol(&tabelaSimbolos, id) != NULL) {
+        printf("\n# %2d:Erro semantico: variavel '%s' ja declarada\n", 
+                info_atom.line, id);
+        exit(1);
+    }
+    
+    insertSymbol(&tabelaSimbolos, id, nextAddress++);
   }
 
   consume(DOIS_PONTOS);
@@ -148,7 +199,18 @@ void statement(){
 //<assignment_statement> ::= <variable> ‘:=’ <expression>
 void assignment_statement(){
 
+  char id[16];
+  strcpy(id, info_atom.attribute.id);
+
   consume(IDENTIFICADOR);
+
+  // Verifica se a variável foi declarada
+  if(searchSymbol(&tabelaSimbolos, id) == NULL) {
+      printf("\n# %2d:Erro semantico: variavel '%s' nao declarada\n", 
+              info_atom.line, id);
+      exit(1);
+  }
+
   consume(ATRIBUICAO);
   expression();
 
@@ -157,13 +219,30 @@ void assignment_statement(){
 //<read_statement> ::= read ‘(’ <variable> { ‘,’ <variable> } ‘)’
 void read_statement(){
 
+  char id[16];
+
   consume(READ);
   consume(ABRE_PAR);
+
+  strcpy(id, info_atom.attribute.id);
   consume(IDENTIFICADOR);
+
+  if(searchSymbol(&tabelaSimbolos, id) == NULL) {
+        printf("\n# %2d:Erro semantico: variavel '%s' nao declarada\n", 
+               info_atom.line, id);
+        exit(1);
+  }
 
   while (lookahead==VIRGULA){
     consume(VIRGULA);
+    strcpy(id, info_atom.attribute.id);
     consume(IDENTIFICADOR);
+
+    if(searchSymbol(&tabelaSimbolos, id) == NULL) {
+        printf("\n# %2d:Erro semantico: variavel '%s' nao declarada\n", 
+               info_atom.line, id);
+        exit(1);
+    }
   }
 
   consume(FECHA_PAR);
@@ -173,13 +252,30 @@ void read_statement(){
 //<write_statement> ::= write ‘(’ <variable> { ‘,’ <variable> } ‘)’
 void write_statement(){
 
+  char id[16];
+
   consume(WRITE);
   consume(ABRE_PAR);
+
+  strcpy(id, info_atom.attribute.id);
   consume(IDENTIFICADOR);
+
+  if(searchSymbol(&tabelaSimbolos, id) == NULL) {
+        printf("\n# %2d:Erro semantico: variavel '%s' nao declarada\n", 
+               info_atom.line, id);
+        exit(1);
+  }
 
   while (lookahead==VIRGULA){
     consume(VIRGULA);
+    strcpy(id, info_atom.attribute.id);
     consume(IDENTIFICADOR);
+
+    if(searchSymbol(&tabelaSimbolos, id) == NULL) {
+        printf("\n# %2d:Erro semantico: variavel '%s' nao declarada\n", 
+               info_atom.line, id);
+        exit(1);
+    }
   }
 
   consume(FECHA_PAR);
@@ -250,8 +346,23 @@ void term(){
 
 //<factor> ::= identifier | constint | constchar | ‘(’ <expression> ‘)’ | not <factor> | true | false
 void factor(){
+
+  char id[16];
+
+   if(lookahead==IDENTIFICADOR){
+        strcpy(id, info_atom.attribute.id);
+        
+        // Verifica se foi declarada
+        if(searchSymbol(&tabelaSimbolos, id) == NULL) {
+            printf("\n# %2d:Erro semantico: variavel '%s' nao declarada\n", 
+                   info_atom.line, id);
+            exit(1);
+        }
+        
+        consume(lookahead);
+    }
     
-  if(lookahead==IDENTIFICADOR || lookahead==NUMERO || lookahead==CARACTER
+  if(lookahead==NUMERO || lookahead==CARACTER
         || lookahead==TRUE || lookahead==FALSE){
         consume(lookahead);
     } 
@@ -353,7 +464,6 @@ const char* print_expected_atom(TAtom atom) {
         case CARACTER: return "caracter";
         case COMENTARIO: return "comentario";
         case EOS: return "fim de arquivo";
-        case ERRO: return "erro";
         
         default: return "desconhecido";
     }
@@ -409,7 +519,6 @@ const char* print_atom(TAtom atom) {
         case CARACTER: return "caracter";
         case COMENTARIO: return "comentario";
         case EOS: return "fim de arquivo";
-        case ERRO: return "erro";
         
         default: return "desconhecido";
     }

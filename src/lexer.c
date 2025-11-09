@@ -7,7 +7,7 @@ TInfoAtom getAtom(){
 
   infoAtom.atom = ERRO;
 
-  while ( *buffer == '\n' || *buffer == ' ' || *buffer == '\t' ){
+  while ( *buffer == '\n' || *buffer == ' ' || *buffer == '\t' || *buffer == '\r' ) {
     if ( *buffer == '\n' ) {
       nLine++; //Incrementa a linha caso haja quebra de linha
     }

@@ -6,11 +6,23 @@
 */
 
 #include "include/global.h"
+#include "src/hash.c" 
 #include "src/parser.c"
 
-int main(void){
+int main(int argc, char *argv[]){
 
-    file = fopen("program.txt", "r"); //Abrindo o arquivo txt que possui o programa
+    if (argc < 2){
+        printf("Erro: falta de argumentos.\nPara compilar use: %s <arquivo.txt>\n", argv[0]);
+        return 1;
+    }
+
+    if (argc > 2){
+        printf("Erro: muitos argumentos.\nPara compilar use: %s <arquivo.txt>\n", argv[0]);
+        return 1;
+    }
+    
+
+    file = fopen(argv[1], "r");
     if (file == NULL){
         perror("Erro ao abrir o arquivo");
         return 1;
@@ -27,6 +39,9 @@ int main(void){
 
     fclose(file); //Fechando o arquivo 
     nLine = 1;
+
+    initializeSymbolTable(&tabelaSimbolos);
+    nextAddress = 0;
 
     info_atom = getAtom();  //Atribuindo o info_atom
     lookahead = info_atom.atom; //Atribuindo o lookahead
