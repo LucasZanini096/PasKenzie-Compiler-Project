@@ -1,0 +1,13 @@
+program aninhado;
+var
+  x, y : integer;
+begin
+  x := 10;
+  if x > 5 then
+    if x > 8 then
+      y := 1
+    else
+      y := 2
+  else
+    y := 3
+end.

@@ -9,6 +9,14 @@
 #include "src/hash.c" 
 #include "src/parser.c"
 
+char *buffer;
+char lexeme[20];
+int nLine;
+TInfoAtom info_atom;
+TAtom lookahead;
+FILE *file;
+int labelCount;
+
 int main(int argc, char *argv[]){
 
     if (argc < 2){
@@ -39,6 +47,7 @@ int main(int argc, char *argv[]){
 
     fclose(file); //Fechando o arquivo 
     nLine = 1;
+    labelCount = 0;
 
     initializeSymbolTable(&tabelaSimbolos);
     nextAddress = 0;
@@ -46,6 +55,8 @@ int main(int argc, char *argv[]){
     info_atom = getAtom();  //Atribuindo o info_atom
     lookahead = info_atom.atom; //Atribuindo o lookahead
     syntactic_analysis(); //Função de anaálise sintática
+
+    printSymbolTable(&tabelaSimbolos); // Printando a tabela de símbolos
 
     return 0;
 }

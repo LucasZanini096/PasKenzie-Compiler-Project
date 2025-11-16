@@ -1,0 +1,13 @@
+program aninhado;
+var
+  i, j : integer;
+begin
+  i := 0;
+  while i < 3 do
+  begin
+    j := 0;
+    while j < 2 do
+      j := j + 1;
+    i := i + 1
+  end
+end.

@@ -56,3 +56,42 @@ TNo* searchSymbol(TTabelaSimbolos *table, char *id) {
     
     return NULL;
 }
+
+// Função para obter o número de entradas na tabela de símbolos
+int countSymbols(TTabelaSimbolos *table) {
+    int count = 0;
+    for (int i = 0; i < PRIME_NUMBER; i++) {
+        TNo *atual = table->entradas[i];
+        while(atual != NULL) {  
+            count++;
+            atual = atual->prox;
+        }
+    } 
+    return count;
+}
+
+// Função para printar a tabela de símbolos (para depuração)
+void printSymbolTable(TTabelaSimbolos *table) {
+    printf("\nTabela de Simbolos:\n");
+    for (int i = 0; i < PRIME_NUMBER; i++) {
+        TNo *atual = table->entradas[i];
+        if(atual != NULL) {
+            printf("Entrada Tabela de Símbolos: [%d] => ", i);
+            while(atual != NULL) {  
+                printf("%s | Endereco: %d\n", atual->ID, atual->endereco);
+                atual = atual->prox;
+            }
+        }
+    } 
+}
+
+
+/*
+
+TABELA DE SIMBOLOS 
+Entrada Tabela Simbolos: [81] => cont | Endereco: 2 
+Entrada Tabela Simbolos: [139] => fat | Endereco: 0  
+Entrada Tabela Simbolos: [179] => num | Endereco: 1 
+
+
+*/

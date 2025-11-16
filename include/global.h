@@ -51,11 +51,13 @@ TReservedWord reserved_words_paskenzie[] = {
     {"true", TRUE}, {"false", FALSE}, {NULL, ERRO}
 };
 
-char *buffer;
-char lexeme[20]; // Composição de fragmentos que compõem o átomo - Lexema
-int nLine;
-TInfoAtom info_atom;
-TAtom lookahead;
-FILE *file;
+extern char *buffer;
+extern char lexeme[20];
+extern int nLine;
+extern TInfoAtom info_atom;
+extern TAtom lookahead;
+extern FILE *file;
+extern int labelCount; 
+
 
 #endif

@@ -38,11 +38,11 @@ void term();
 //<factor> ::= identifier | constint | constchar | ‘(’ <expression> ‘)’ | not <factor> | true | false
 void factor();
 //<relational_operator> ::= ‘<>’ | ‘<’ | ‘<=’ | ‘>=’ | ‘>’ | ‘=’ | or | and
-void relational_operator(); 
+void relational_operator(TAtom op); 
 //<adding operator> ::=  ‘+’ | ‘-’
-void adding_operator(); 
+void adding_operator(TAtom op); 
 //<multiplying_operator> ::= ‘*’ | div
-void multiplying_operator();
+void multiplying_operator(TAtom op);
 //Função de entrada no analisadro sintático
 void syntactic_analysis();
 
@@ -50,5 +50,7 @@ void syntactic_analysis();
 const char* print_expected_atom(TAtom atom);
 //Função para printar o átomo de saída
 const char* print_atom(TAtom atom);
+//Função para incrementar rótulo global
+int newLabel();
 
 #endif
