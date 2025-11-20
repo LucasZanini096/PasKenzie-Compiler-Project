@@ -1,4 +1,0 @@
-program ex2; 
-begin 
-    write(maior ;  (*erro sintatico esperado*)
-end.

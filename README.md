@@ -14,7 +14,7 @@
 
 ## Objetivo
 
-Este projeto implementa um compilador em estágio inicial, com as fases de **análise léxica** e **análise sintática** para a linguagem **PasKenzie**.  
+Este projeto implementa um compilador, com as fases de **análise léxica**, **análise sintática**, **análise semântica** e **geração de código intermediário ( MEPA )** para a linguagem **PasKenzie**. 
 A linguagem aceita variáveis dos tipos `integer`, `boolean` e `char`, comandos condicionais `if/then/else` e de repetição `while/do`, além das funções de entrada `read` e saída `write`.
 
 ---
@@ -24,7 +24,8 @@ A linguagem aceita variáveis dos tipos `integer`, `boolean` e `char`, comandos 
 A implementação foi estruturada em módulos para maior clareza:
 
 - **lexer.c / lexer.h** – responsável pela análise léxica
-- **parser.c / parser.h** – responsável pela análise sintática
+- **parser.c / parser.h** – responsável pela análise sintática e geração de código intermediário ( MEPA )
+- **hash.c / hash.h** – responsável pela análise semântica e gestão de tabela de símbolos 
 - **global.h** – definições globais
 
 Foi adotado um **token global lookahead** e uma função `consome()` para avançar, permitindo um parser $LL(1)$ simples.
@@ -73,3 +74,7 @@ E execute usando:
 ```
 ./compilador {NOME_DO_ARQUIVO}.txt
 ```
+
+Caso queria testar com um dos testes fornecidos, basta copiar o conteúdo do arquivo `tests/{NOME_DO_ARQUIVO}.txt` para um novo arquivo com extensão `.txt` e executar o comando acima.
+
+
