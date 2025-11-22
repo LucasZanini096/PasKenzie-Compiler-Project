@@ -17,13 +17,21 @@ TInfoAtom getAtom(){
     
   infoAtom.line = nLine;
 
-  //Verifica se é um comentário
-  if((*buffer) == '(' && (*(buffer+1)) == '*'){
-    acknowledge_comment(&infoAtom);
+  // Verifica e descarta comentários
+  while((*buffer) == '(' && (*(buffer+1)) == '*'){
+    acknowledge_comment();
+
+    // Pular espaços em branco após o comentário
+    while ( *buffer == '\n' || *buffer == ' ' || *buffer == '\t' || *buffer == '\r' ) {
+      if ( *buffer == '\n' ) {
+        nLine++;
+      }
+      buffer++;
+    }
   }
   
   //Verifica se é um número inteiro 
-  else if (isdigit(*buffer)){  //Reconhecendo números inteiros
+  if (isdigit(*buffer)){  //Reconhecendo números inteiros
     recognize_number(&infoAtom);
   }
 
@@ -196,7 +204,7 @@ void recognize_char(TInfoAtom *infoAtom){
 }
 
 // Reconhecedor de comentários
-void acknowledge_comment(TInfoAtom *infoAtom){
+void acknowledge_comment(void){
     buffer += 2; // Consome (*
 
 q1:
@@ -206,7 +214,6 @@ q1:
 
    if((*buffer) == '*' && (*(buffer+1)) == ')'){
     buffer += 2;
-    infoAtom->atom = COMENTARIO;
     return;
    }
 
